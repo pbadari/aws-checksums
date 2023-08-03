@@ -351,15 +351,10 @@ static uint32_t crc32c_avx512(const uint8_t *input, int length, uint32_t crc)
         y7 = _mm512_loadu_si512((__m512i *)(input + 0x80));
         y8 = _mm512_loadu_si512((__m512i *)(input + 0xC0));
 
-        x1 = _mm512_xor_si512(x1, x5);
-        x2 = _mm512_xor_si512(x2, x6);
-        x3 = _mm512_xor_si512(x3, x7);
-        x4 = _mm512_xor_si512(x4, x8);
-
-        x1 = _mm512_xor_si512(x1, y5);
-        x2 = _mm512_xor_si512(x2, y6);
-        x3 = _mm512_xor_si512(x3, y7);
-        x4 = _mm512_xor_si512(x4, y8);
+        x1 = _mm512_ternarylogic_epi64(x1, x5, y5, 0x96);
+        x2 = _mm512_ternarylogic_epi64(x2, x6, y6, 0x96);
+        x3 = _mm512_ternarylogic_epi64(x3, x7, y7, 0x96);
+        x4 = _mm512_ternarylogic_epi64(x4, x8, y8, 0x96);
 
         input += 256;
         length -= 256;
@@ -372,18 +367,15 @@ static uint32_t crc32c_avx512(const uint8_t *input, int length, uint32_t crc)
 
     x5 = _mm512_clmulepi64_epi128(x1, x0, 0x00);
     x1 = _mm512_clmulepi64_epi128(x1, x0, 0x11);
-    x1 = _mm512_xor_si512(x1, x2);
-    x1 = _mm512_xor_si512(x1, x5);
+    x1 = _mm512_ternarylogic_epi64(x1, x2, x5, 0x96);
 
     x5 = _mm512_clmulepi64_epi128(x1, x0, 0x00);
     x1 = _mm512_clmulepi64_epi128(x1, x0, 0x11);
-    x1 = _mm512_xor_si512(x1, x3);
-    x1 = _mm512_xor_si512(x1, x5);
+    x1 = _mm512_ternarylogic_epi64(x1, x3, x5, 0x96);
 
     x5 = _mm512_clmulepi64_epi128(x1, x0, 0x00);
     x1 = _mm512_clmulepi64_epi128(x1, x0, 0x11);
-    x1 = _mm512_xor_si512(x1, x4);
-    x1 = _mm512_xor_si512(x1, x5);
+    x1 = _mm512_ternarylogic_epi64(x1, x4, x5, 0x96);
 
     /*
      * Single fold blocks of 64, if any.
@@ -394,8 +386,7 @@ static uint32_t crc32c_avx512(const uint8_t *input, int length, uint32_t crc)
 
         x5 = _mm512_clmulepi64_epi128(x1, x0, 0x00);
         x1 = _mm512_clmulepi64_epi128(x1, x0, 0x11);
-        x1 = _mm512_xor_si512(x1, x2);
-        x1 = _mm512_xor_si512(x1, x5);
+        x1 = _mm512_ternarylogic_epi64(x1, x2, x5, 0x96);
 
         input += 64;
         length -= 64;
@@ -412,8 +403,7 @@ static uint32_t crc32c_avx512(const uint8_t *input, int length, uint32_t crc)
     a3 = _mm_clmulepi64_si128(a1, a0, 0x00);
     a1 = _mm_clmulepi64_si128(a1, a0, 0x11);
 
-    a1 = _mm_xor_si128(a1, a3);
-    a1 = _mm_xor_si128(a1, a2);
+    a1 = _mm_ternarylogic_epi64(a1, a3, a2, 0x96);
 
     /*
      * Fold 384-bits to 256-bits.
@@ -421,8 +411,7 @@ static uint32_t crc32c_avx512(const uint8_t *input, int length, uint32_t crc)
     a2 = _mm512_extracti32x4_epi32(x1, 2);
     a3 = _mm_clmulepi64_si128(a1, a0, 0x00);
     a1 = _mm_clmulepi64_si128(a1, a0, 0x11);
-    a1 = _mm_xor_si128(a1, a3);
-    a1 = _mm_xor_si128(a1, a2);
+    a1 = _mm_ternarylogic_epi64(a1, a3, a2, 0x96);
 
     /*
      * Fold 256-bits to 128-bits.
@@ -430,8 +419,7 @@ static uint32_t crc32c_avx512(const uint8_t *input, int length, uint32_t crc)
     a2 = _mm512_extracti32x4_epi32(x1, 3);
     a3 = _mm_clmulepi64_si128(a1, a0, 0x00);
     a1 = _mm_clmulepi64_si128(a1, a0, 0x11);
-    a1 = _mm_xor_si128(a1, a3);
-    a1 = _mm_xor_si128(a1, a2);
+    a1 = _mm_ternarylogic_epi64(a1, a3, a2, 0x96);
 
     /*
      * Fold 128-bits to 64-bits.

@@ -72,7 +72,7 @@ if (USE_CPU_EXTENSIONS)
         endif()
 
         if (HAVE_AVX512_INTRINSICS)
-            set(AVX512_CFLAGS "-mavx512f")
+            set(AVX512_CFLAGS "-mavx512f -mavx512vl")
         endif()
 
         set(AWS_CMAKE_REQUIRED_FLAGS "${SSE42_CFLAGS} ${AVX512_CFLAGS} -mvpclmulqdq -mpclmul")
